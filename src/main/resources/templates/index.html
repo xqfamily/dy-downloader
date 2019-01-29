@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>视频管理</title>
+    <link rel="stylesheet" href="/css/iview.css">
+</head>
+<body>
+    <div id="app" style="margin:30px;text-align: center">
+        <div style="margin: 15px">
+            <i-select v-model="params.fps" style="width:100px">
+                <i-option v-for="item in fps" :value="item.val" :key="item.val">{{ item.val }}</i-option>
+            </i-select>
+            <i-select v-model="params.resolution" clearable filterable style="width:100px">
+                <i-option v-for="item in resolutions" :value="item.val" :key="item.val">{{ item.val }}</i-option>
+            </i-select>
+            <i-select v-model="params.mergeUse" clearable filterable style="width:100px">
+                <i-option v-for="item in mergeUse" :value="item.val" :key="item.val">{{ item.val }}</i-option>
+            </i-select>
+            <i-button type="success" @click="getData">搜索</i-button>
+            <i-button type="success" @click="merge">合并视频</i-button>
+        </div>
+        <div class="table-con">
+            <i-table border ref="selection" @on-selection-change="select" :columns="columns" :data="dyData" ></i-table>
+        </div>
+        <div style="margin: 15px">
+            <Page :total="params.total" :page-size="params.size" @on-change="changePage" show-total></Page>
+        </div>
+    </div>
+
+    <script src="/js/vue.min.js"></script>
+    <script src="/js/iview.min.js"></script>
+    <script src="/js/axios.min.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                columns: [
+                    {
+                        type: 'selection',
+                        width: 60,
+                        align: 'center'
+                    },
+                    {
+                        title: 'id',
+                        key: 'id',
+                        // width:125,
+                        align: 'center'
+                    },
+                    {
+                        title: '视频名称',
+                        key: 'videoName',
+                        // width:125,
+                        align: 'center'
+                    },
+                    {
+                        title: '状态',
+                        key: 'mergeUse',
+                        // width:125,
+                        align: 'center'
+                    },
+                    {
+                        title: '合并文件名',
+                        key: 'mergeName',
+                        // width:125,
+                        align: 'center'
+                    },{
+                        title: '视频地址',
+                        key: 'videoUrl',
+                        // width: 125,
+                        align: 'center'
+                    },{
+                        title: '分辨率',
+                        key: 'resolution',
+                        // width: 125,
+                        align: 'center'
+                    },{
+                        title: 'fps',
+                        key: 'fps',
+                        // width: 125,
+                        align: 'center'
+                    },{
+                        title: '视频时长',
+                        key: 'videoTime',
+                        // width: 125,
+                        align: 'center'
+                    },{
+                        title: '创建时间',
+                        key: 'createTime',
+                        // width: 200,
+                        align: 'center'
+                    },{
+                        title: '封面',
+                        key: 'videoImg',
+                        // width: 125,
+                        align: 'center',
+                        render: (h, params) => {
+                            let _this = this;
+                            return h('img', {
+                                attrs:{
+                                    'src':'/dy/images/'+params.row.videoImg,
+                                    'width':'80',
+                                    'height':'120'
+                                }
+                            }, '点击查看')
+
+                        }
+                    }
+                ],
+                dyData:[],
+                mergeData:[],
+                fps:[],
+                resolutions:[],
+                mergeUse:[
+                    {"val":""},
+                    {"val":"未合并"},
+                    {"val":"已合并"}
+                ],
+                loading: false,
+                params:{
+                    mergeUse:undefined,
+                    fps:undefined,
+                    resolution:undefined,
+                    total: 0,
+                    page: 0,
+                    size: 30,
+                    sort: 'createTime,desc'
+                }
+            },
+            mounted() {
+                console.info("加载数据")
+                this.getData();
+                this.getFpsResData();
+            },
+            methods: {
+                select:function(selects){
+                    console.info("aaa",selects)
+                    this.mergeData = selects;
+                },
+                changePage: function (row) {
+                    this.params.page = row - 1;
+                    this.getData();
+                },
+                getData: function () {
+                    let that = this;
+                    axios.get('/dy', {
+                        params: that.params
+                    }).then(res => {
+                        that.dyData= res.data.content;
+                        that.params.total = res.data.totalElements;
+                    })
+                },
+                getFpsResData: function () {
+                    console.info("getFpsResData")
+                    let that = this;
+                    axios.get('/dy/fps/res').then(res => {
+                        console.info(res)
+                        that.fps= res.data.fps;
+                        that.resolutions = res.data.resolution;
+                        that.fps.unshift({
+                            "val":""
+                        });
+                        that.resolutions.unshift({
+                            "val":""
+                        });
+                    })
+                },
+                merge(){
+                    let _this = this;
+                    console.info("保存信息")
+                    axios.post('/dymerge', _this.mergeData).then(function (response) {
+                        alert("合并视频成功！"+window.location.href+"dy/file/"+response.data);
+                    }).catch(function (error) {
+                        console.log(error);
+                    });
+
+                }
+            }
+        })
+
+    </script>
+</body>
+</html>
