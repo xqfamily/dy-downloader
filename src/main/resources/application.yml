@@ -6,10 +6,10 @@ spring:
   jackson:
     time-zone: GMT+8
   datasource:
-    url: jdbc:mysql://localhost:3306/douyin?createDatabaseIfNotExist=true&characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&useSSL=false
     driver-class-username: com.mysql.jdbc.Driver
+    url: jdbc:mysql://139.129.247.87:3307/douyin?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&useSSL=false&zeroDateTimeBehavior=convertToNull
     username: root
-    password: root
+    password: xxzxMysql
   jpa:
     hibernate:
       ddl-auto: update
@@ -18,5 +18,10 @@ spring:
 
 
 dy:
-  root-path: /home/icodebug/视频/dy/
+  root-path: /home/icodebug/视频/fkwxr1/
 #debug: true
+  thread:
+    agencyIpThreadPoolNum: 30
+    idUpVedioUrlThreadPoolNum: 30
+    downVedioThreadPoolNum: 100
+    crawlAgencyIpCountPage: 10

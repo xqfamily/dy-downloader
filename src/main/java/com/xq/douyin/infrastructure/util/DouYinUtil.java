@@ -1,5 +1,8 @@
 package com.xq.douyin.infrastructure.util;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.sun.javafx.binding.StringFormatter;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class DouYinUtil {
@@ -21,6 +25,7 @@ public class DouYinUtil {
     private String ROOTPATH;
 
     private static final String BASE_URL = "https://aweme.snssdk.com/aweme/v1/play/?video_id=%s";
+    private static final String DETAIL_URL = "https://api-hl.amemv.com/aweme/v1/aweme/detail/?aid=1128&app_name=aweme&version_code=251&aweme_id=%s";
 /*    public static void main(String[] args) {
 //        String shareUrl = "http://v.douyin.com/Nw6mJV/";
 //        String shareUrl = "http://v.douyin.com/NESph6/";
@@ -37,21 +42,44 @@ public class DouYinUtil {
      * @param url
      * @return
      */
-    public String getVideoUrl(String url){
+    public JSONObject getVideoUrl(String url){
         try {
             Document document = Jsoup.connect(url).get();
-            String html = document.body().html();
+            String location = document.location();
+            System.out.println(location);
+
+            String id = location.substring(location.indexOf("video/")+6,location.indexOf("/?region"));
+            Document document1 = Jsoup.connect(String.format(DETAIL_URL,id)).ignoreContentType(true)
+                    .header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+                    .header("Upgrade-Insecure-Requests","1")
+                    .header("User-Agent","Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Safari/537.36")
+                    .get();
+//            System.out.println(document1.text());
+            JSONObject object = JSONObject.parseObject(document1.body().text());
+//            JSONObject aweme_detail = object.getJSONObject("aweme_detail");
+//            JSONObject video = aweme_detail.getJSONObject("video");
+//            JSONObject play_addr_lowbr = video.getJSONObject("play_addr_lowbr");
+//            JSONObject plays = object.getJSONObject("aweme_detail").getJSONObject("video").getJSONObject("play_addr_lowbr");
+//            JSONArray url_list = plays.getJSONArray("url_list");
+            String playUrl = object.getJSONObject("aweme_detail").getJSONObject("video").getJSONObject("play_addr_lowbr").getJSONArray("url_list").get(0).toString();
+
+            JSONObject result = new JSONObject();
+            result.put("id",id);
+            result.put("playUrl",playUrl);
+            /*String html = document.body().html();
             int len = html.indexOf("video_id");
             String end = html.substring(len);
             int indexOf = end.indexOf("\",");
             String videoId = end.substring(9, indexOf);
             videoId = videoId.replace("\\u0026", "&");
-            return String.format(BASE_URL, videoId);
+            return String.format(BASE_URL, videoId);*/
+            return result;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
+
 
     /**
      * 获取抖音视频下载地址
@@ -81,6 +109,7 @@ public class DouYinUtil {
      */
     public String down(String u,String name){
         try {
+            System.out.println("++++++++++++++++++>下载："+u+"      "+name);
             // 构造URL
             URL url = new URL(u);
             // 打开连接

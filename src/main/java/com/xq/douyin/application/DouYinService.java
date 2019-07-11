@@ -22,19 +22,18 @@ public class DouYinService {
 
     public DouYin save(String url){
 
-        String videoUrl = douYinUtil.getVideoUrl(url);
+        JSONObject video = douYinUtil.getVideoUrl(url);
 
-        String video_id = videoUrl.substring(videoUrl.indexOf("video_id") + 9, videoUrl.lastIndexOf("&"));
-        String videoName = video_id+".mp4";
+        String videoName = video.getString("id")+".mp4";
         DouYin dy = douYinRepository.findByVideoName(videoName);
         if (dy!=null){
             return dy;
         }
-        String videoDownUrl = douYinUtil.getVideoDownUrl(videoUrl);
+        String videoDownUrl = douYinUtil.getVideoDownUrl(video.getString("playUrl"));
         douYinUtil.down(videoDownUrl,videoName);
         JSONObject videoInfo = FFmpegUtil.getVideoInfo(ROOTPATH + videoName);
 
-        dy = new DouYin(url, videoUrl, videoName, videoInfo.getString("resolution"), videoInfo.getLong("time"),video_id+"_catch.jpg",videoInfo.getString("fps"));
+        dy = new DouYin(url, video.getString("playUrl"), videoName, videoInfo.getString("resolution"), videoInfo.getLong("time"),video.getString("id")+"_catch.jpg",videoInfo.getString("fps"));
         douYinRepository.saveAndFlush(dy);
 
         FFmpegUtil.catchImage(ROOTPATH + videoName);

@@ -69,7 +69,7 @@ public class DouYinController {
 
     @GetMapping("/convert")
     public ResponseEntity convert(String url){
-        String videoDownUrl = douYinUtil.getVideoDownUrl(douYinUtil.getVideoUrl(url));
+        String videoDownUrl = douYinUtil.getVideoDownUrl(douYinUtil.getVideoUrl(url).getString("playUrl"));
         return ResponseEntity.ok(videoDownUrl);
     }
 
